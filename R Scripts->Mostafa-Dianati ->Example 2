@@ -1,0 +1,76 @@
+
+#For my previous project this is a sample to simulates data on:
+#age, sex, vitamin D, red meat consumption, fish consumption, olive oil consumption, family history of cancer and bladder cancer risk. Then I performed logistic regression to see the association between these factors and bladder cancer risk. Additionally, it conducts t-test, ANOVA, and chi-square test to analyze the significance of individual factors on bladder cancer risk.
+#Import my original date: 
+write.table(DataToExport, file="bladdercacner.csv", sep=",")
+# Or make a data simulation as bellow: 
+
+# First, I need to install tidyverse package
+install.packages("tidyverse")
+
+# Load the above libraries
+library(tidyverse)
+# and 
+library(MASS)
+
+# # Just as a simulation data:
+
+sample_size <- 750
+patients <- data.frame(
+  group = rep('patient', sample_size),
+  age = rnorm(sample_size, mean=60, sd=10),
+  sex = factor(sample(rbind('male', 'female'), sample_size, replace=TRUE)),
+  vitamin_D = rnorm(sample_size, mean=30, sd=5),
+  red_meat_consumption = rnorm(sample_size, mean=5, sd=1.5),
+  fish_consumption = rnorm(sample_size, mean=3, sd=1),
+  olive_oil_consumption = rnorm(sample_size, mean=2, sd=0.5),
+  family_history = factor(sample(rbind('yes', 'no'), sample_size, replace=TRUE)),
+  stage = factor(sample(1:4, sample_size, replace=TRUE), ordered=TRUE),
+  mortality = rbinom(sample_size, 1, prob=0.05)
+)
+
+controls <- data.frame(
+  group = rep('control', sample_size),
+  age = rnorm(sample_size, mean=60, sd=10),
+  sex = factor(sample(rbind('male', 'female'), sample_size, replace=TRUE)),
+  vitamin_D = rnorm(sample_size, mean=30, sd=5),
+  red_meat_consumption = rnorm(sample_size, mean=5, sd=1.5),
+  fish_consumption = rnorm(sample_size, mean=3, sd=1),
+  olive_oil_consumption = rnorm(sample_size, mean=2, sd=0.5),
+  family_history = factor(sample(rbind('yes', 'no'), sample_size, replace=TRUE)),
+  stage = factor(sample(1:4, sample_size, replace=TRUE), ordered=TRUE),
+  mortality = rbinom(sample_size, 1, prob=0.02)
+)
+
+# Combine patient and control data
+data <- rbind(patients, controls)
+
+# To perform logistic regression (find associations in a model)
+
+model <- glm(mortality ~ age + sex + vitamin_D + red_meat_consumption + fish_consumption + olive_oil_consumption + family_history + stage, data=data, family=binomial)
+summary(model)
+
+# Perform t-test (age numerical variable ~ bladder cancer catigorical variable, binary variable)
+t.test(data$age ~ data$group)
+
+# Perform ANOVA (anova for age and "bladder cancer stage", stages are 1, 2, 3 and 4)
+
+anova_result <- aov(vitamin_D ~ group, data=data)
+summary(anova_result)
+
+# Perform chi-square test (two cat variables)
+chisq_result <- chisq.test(table(data$sex, data$group))
+chisq_result
+
+# now we can make any graph using the beloww pack:
+library(ggplot2)
+
+# Example: scatter plot of stage and age
+ggplot(data, aes(x=stage, y=age)) +
+  geom_point(aes(color=group)) +
+  theme_minimal() +
+  labs(title="Scatter Plot of Stage and Age", x="Stage of Cancer", y="Age")
+
+# to customize the graphs for example for a linear model (data are not included here):
+legend(65, 15, legend = c("model1: linear", "model: poly x^2", "model3: poly x^2 + x^3"), 
+       col=c("red", "blue", "green", "gray", "orange"), lty=c(1,1,3,4,5), lwd=5, bty="n", cex=0.9)
